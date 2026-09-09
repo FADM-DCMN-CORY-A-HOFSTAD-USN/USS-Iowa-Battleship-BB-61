@@ -1,0 +1,96 @@
+using System;
+using System.Collections.Generic;
+
+namespace UnivacFractureSystem
+{
+    public class FractureBedController
+    {
+        // 16-bit registers simulating real-time strain-gauge inputs
+        private Dictionary<ushort, byte> operationalMemory = new Dictionary<ushort, byte>();
+        public bool SystemHalt { get; private set; } = false;
+
+        public void InjectSensorTelemetry(ushort registerAddress, byte parameterValue)
+        {
+            operationalMemory[registerAddress] = parameterValue;
+        }
+
+        public void ProcessInstruction(ushort address)
+        {
+            if (!operationalMemory.ContainsKey(address)) return;
+
+            byte opCode = operationalMemory[address];
+            byte argument = operationalMemory.ContainsKey((ushort)(address + 1)) ? operationalMemory[(ushort)(address + 1)] : (byte)0x00;
+
+            switch (opCode)
+            {
+                case 0x2B: // OP: READ_TRACTION_LOAD
+                    Console.WriteLine($"[UNIVAC TRACTION REG 0x{address:X4}]: OPCODE 2B - SCANNING PULLEY LOAD CELL. TENSION MATRIX VALUE: {argument} LBS.");
+                    if (argument < 10)
+                    {
+                        // Trigger warning for slack cable or displaced fracture limb
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine(" >> WARNING: UNEXPECTED REDUCTION IN TRACTION LOAD COEFFICIENCY. CHECK FRAME ALIGNMENT.");
+                        Console.ResetColor();
+                    }
+                    break;
+
+                case 0x6C: // OP: COMPENSATE_SHIP_ROLL
+                    // Compensates for high-amplitude roll or yaw variations
+                    int calculatedAngle = argument;
+                    Console.WriteLine($"[UNIVAC TRACTION REG 0x{address:X4}]: OPCODE 6C - IMU DATA ACQUIRED. CURRENT SHIP SEAWAY DISPLACEMENT: {calculatedAngle}°");
+                    if (calculatedAngle > 15)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine(" >> BALANCING HYDRAULIC PRESSURE TO SECURE STABILIZED TRACTION GEOMETRY.");
+                        Console.ResetColor();
+                    }
+                    break;
+
+                case 0x9E: // OP: EMERGENCY_LOCK_FRAME
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"[UNIVAC TRACTION REG 0x{address:X4}]: OPCODE 9E - COMBAT SHOCK DETECTED. ENGAGING ELECTROMECHANICAL LOCKING PINS.");
+                    Console.ResetColor();
+                    break;
+
+                case 0x00: // OP: HALT
+                    Console.WriteLine($"[UNIVAC TRACTION REG 0x{address:X4}]: OPCODE 00 - END RUN CYCLE.");
+                    SystemHalt = true;
+                    break;
+
+                default:
+                    Console.WriteLine($"[UNIVAC INTERFACE EXCEPTION]: UNMAPPED REGISTER CONFIGURATION 0x{opCode:X2}");
+                    break;
+            }
+        }
+    }
+
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            FractureBedController bedProcessor = new FractureBedController();
+
+            // Program execution stream mirroring historical hex signal lines
+            byte[] controlHexStream = new byte[] {
+                0x2B, 0x08,  // Addr 0x0000: Traction Cable Sensor (Read 8 lbs)
+                0x6C, 0x12,  // Addr 0x0002: Ship Roll Compensation Logic (18 degree heavy sea roll)
+                0x9E, 0xFF,  // Addr 0x0004: Emergency Shock Isolation Clamp Trigger
+                0x00, 0x00   // Addr 0x0006: Processing Cycle Complete Terminus
+            };
+
+            for (ushort i = 0; i < controlHexStream.Length; i++)
+            {
+                bedProcessor.InjectSensorTelemetry(i, controlHexStream[i]);
+            }
+
+            ushort executionPointer = 0x0000;
+            Console.WriteLine("=== INITIALIZING UNIVAC ORTHOPEDIC FRACTURE WARD TRACKING ENGINE ===");
+
+            while (!bedProcessor.SystemHalt && executionPointer < controlHexStream.Length)
+            {
+                bedProcessor.ProcessInstruction(executionPointer);
+                executionPointer += 2; // Incremented by standard two-byte register strides
+            }
+        }
+    }
+}
