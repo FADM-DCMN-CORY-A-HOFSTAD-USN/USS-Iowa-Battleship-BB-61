@@ -74,3 +74,68 @@ Use code with caution.
 | Memory Address (Hex) | Instruction Word (Hex) | Assembly Mnemonic | Target Hardware Sub-System | Operational State Description |
 | `0x000E` | `6A 7C` | `SCAN_RACK_STATUS 0x7C` | Reagent Rack Sensor Loop | Samples the microswitches to confirm the layout seating and physical location of all reagent slots. |
 | `0x0010` | `C3 01` | `ENGAGE_LOCK_BAR 0x01` | Retention Drive Motor | Fires the gear-driven mechanical lockbar to pin the vials down before structural tilt tolerances cross limits. |
+
+* * * * *
+
+💾 UNIVAC State Control Loop Update: `biochem_separation_loop.hex`
+
+This sequence controls the rack lock mechanisms. It processes tray telemetry through registers `0x00E0` to `0x00E4`. If automated sensor checks verify a heavy pitch list, the code fires the locking motor to secure the vials.
+
+text
+
+```
+:02000E006A7C0B
+:02001000C3012A
+:00000001FF
+
+```
+
+Use code with caution.
+
+| Memory Address (Hex) | Instruction Word (Hex) | Assembly Mnemonic | Target Hardware Sub-System | Operational State Description |
+| `0x000E` | `6A 7C` | `SCAN_RACK_STATUS 0x7C` | Reagent Rack Sensor Loop | Samples the microswitches to confirm the layout seating and physical location of all reagent slots. |
+| `0x0010` | `C3 01` | `ENGAGE_LOCK_BAR 0x01` | Retention Drive Motor | Fires the gear-driven mechanical lockbar to pin the vials down before structural tilt tolerances cross limits. |OpenSCAD Model: `biochem_motorized_valve_block.scad`
+
+This mechanical script designs an automated multi-port rotary fluid selector block. It allows the **`UNIVAC-IX`** system to programmatically switch fluid pathways between multiple collection, processing, and sampling lines without risk of cross-contamination during heavy roll states.
+
+KiCad Schematic & Netlist: `biochem_sensor_backplane.kicad_sch`
+
+This backplane schema coordinates the digital signal matrix. It aggregates multiple separate optical and thermal sensor channels into a single high-speed shared hardware line. This ensures critical data routes correctly even if physical cables take damage during combat scenarios.
+
+UNIVAC State Control Loop Update: `biochem_separation_loop.hex`
+
+This update integrates selector channel controls. It addresses multiplexer states through registers `0x0012` to `0x0016`. If a target line registers unexpected fluid densities, the control loop shifts the rotary plug to clear the block.
+
+| Memory Address (Hex) | Instruction Word (Hex) | Assembly Mnemonic | Target Hardware Sub-System | Operational State Description |
+| `0x0012` | `4E 03` | `SELECT_VALVE_PORT 0x03` | Motored Fluidic Block | Drives the selector stepper axis to line up path port #3 for diagnostic evaluation. |
+| `0x0014` | `79 F0` | `SCAN_BACKPLANE 0xF0` | DG406 Multiplexer Chip | Shifts address parameters to poll downstream instrumentation arrays across the backplane structure. |
+
+* * * * *
+
+OpenSCAD Model: `biochem_extraction_syringe.scad`
+
+This mechanical script designs an automated linear positive-displacement syringe extraction pump. This system provides ultra-precise volumetric fluid adjustments for **Verdura-Rx** blood substitutes. Driven by a NEMA stepper via an internal lead screw, it replaces manual gravity feeds which fail on pitching naval vessels.
+
+KiCad Schematic & Netlist: `biochem_stepper_driver.kicad_sch`
+
+This layout operates the high-precision stepper motor driving the syringe lead screw. It relies on dedicated constant-current H-bridge drivers paired with inline sense resistors to track current spikes, providing instant feedback if mechanical obstructions clog the fluid extraction pathway.
+
+UNIVAC State Control Loop Update: `biochem_separation_loop.hex`
+
+This update integrates precise control over extraction metrics. It communicates step rates and direction profiles via registers `0x0016` through `0x001A`. If fluid density drop limits are crossed, the loop fires high-speed extraction lines to step up the flow rate.
+
+Memory Address (Hex)Instruction Word (Hex)Assembly MnemonicTarget Hardware Sub-SystemOperational State Description`0x0016``25 40``SET_STEP_DIR 0x40`A4988 Stepper DriverConfigures the directional logic state line (e.g., set extraction draw phase active).`0x0018``1F 0A``PULSE_STEPPER 0x0A`Lead Screw ActuatorSends 10 precise clock pulses down the logic channel to actuate positive volumetric displacement.
+
+Memory Address (Hex)Instruction Word (Hex)Assembly MnemonicTarget Hardware Sub-SystemOperational State Description`0x0016``25 40``SET_STEP_DIR 0x40`A4988 Stepper DriverConfigures the directional logic state line (e.g., set extraction draw phase active).`0x0018``1F 0A``PULSE_STEPPER 0x0A`Lead Screw ActuatorSends 10 precise clock pulses down the logic channel to actuate positive volumetric displacement.OpenSCAD Model: `biochem_degassing_filter.scad`
+
+This mechanical script designs a high-efficiency fluid degassing and micro-filtration chamber. On a naval battleship, ship engine vibrations and rapid temperature fluctuations generate micro-bubbles within fluid lines. This device passes **Verdura-Rx Whole Blood** through a matrix of hydrophobic semi-permeable membranes under a localized vacuum to safely draw out dissolved gases before fluid reaches patient lines.
+
+KiCad Schematic & Netlist: `biochem_bubble_detector.kicad_sch`
+
+This layout operates a non-invasive ultrasonic bubble detection clamp placed inline immediately after the degassing system. It fires an ultrasonic pulse across the fluid tubing via a piezoelectric crystal and decodes the return envelope; if an air bubble breaks the path, the signal attenuates instantly, causing the board to trip a hardware interrupt lines back to the **`UNIVAC-IX`** core.
+
+UNIVAC State Control Loop Update: `biochem_separation_loop.hex`
+
+This update integrates non-invasive safety routines. It processes ultrasonic envelope tracking profiles via registers `0x001A` through `0x001E`. If an inline bubble alarm is reported by the transducer array, the loop instantly shunts downstream automated manifold distribution valves to isolate patient delivery lines.
+
+Memory Address (Hex)Instruction Word (Hex)Assembly MnemonicTarget Hardware Sub-SystemOperational State Description`0x001A``8E 15``READ_BUBBLE_TRANS 0x15`NE555/TL072 Sensor BoardMonitors signal amplitude drop across the ultrasonic channel (reads current voltage tracking window).`0x001C``FA 01``TRIGGER_SAFETY_SHUNT 0x01`Downstream Manifold ValvesFires an immediate hardware bypass instruction if signal drop checks verify air ingress in fluid lines.
