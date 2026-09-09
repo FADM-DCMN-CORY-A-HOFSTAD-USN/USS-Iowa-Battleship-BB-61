@@ -37,3 +37,40 @@ Decoded State Machine Instruction Breakdowns
 | `0x0008` | `9B 40` | `ADJUST_PWM 0x40` | High-Power Driver MOSFET | Modulates the duty-cycle output to balance heating elements against fluid flow rates. |
 | `0x000A` | `F1 FF` | `SAFETY_OVERRIDE 0xFF` | Emergency System Shunt | Monitors structural line bounds; drops power connections if shipboard sensors report high-g shock. |
 | `0x000C` | `00 00` | `HALT_SYSTEM 0x00` | Main Process Registers | Terminates execution loop safely and parks all mechanical arrays in default storage positions. |
+
+OpenSCAD Model: `biochem_incubator_housing.scad`
+
+This mechanical enclosure utilizes double-walled thermal insulation combined with bottom-mounted heavy shock isolation dampers. This stabilizes fragile fluid assay samples against high-g concussive forces from artillery launches.
+
+C# Execution Emulator: `biochem_processor.cs`
+
+This testing harness parses the structural register parameters contained in **`biochem_separation_loop.hex`** and tests processing execution logic under varying deep-sea pitch configurations.
+
+OpenSCAD Model: `biochem_reagent_storage_rack.scad`
+
+This mechanical script designs a self-locking, motorized chemical reagent tray assembly. It keeps the **Verdura-Rx** processing fluids locked tightly in their tracks using internal gear-driven retention bars, preventing fluid spills or displacement when the hull rolls heavily.
+
+KiCad Schematic & Netlist: `biochem_power_regulator.kicad_sch`
+
+This power regulation board conditions volatile 24VDC shipboard line power down into filtered, transient-free 5VDC logic paths. It implements passive LC filters and high-power low-dropout (LDO) regulators to shield sensitive optical and biochemical sensors from grid noise caused by gun mount fire or engine ignition cycles.
+
+* * * * *
+
+UNIVAC State Control Loop Update: `biochem_separation_loop.hex`
+
+This sequence controls the rack lock mechanisms. It processes tray telemetry through registers `0x00E0` to `0x00E4`. If automated sensor checks verify a heavy pitch list, the code fires the locking motor to secure the vials.
+
+text
+
+```
+:02000E006A7C0B
+:02001000C3012A
+:00000001FF
+
+```
+
+Use code with caution.
+
+| Memory Address (Hex) | Instruction Word (Hex) | Assembly Mnemonic | Target Hardware Sub-System | Operational State Description |
+| `0x000E` | `6A 7C` | `SCAN_RACK_STATUS 0x7C` | Reagent Rack Sensor Loop | Samples the microswitches to confirm the layout seating and physical location of all reagent slots. |
+| `0x0010` | `C3 01` | `ENGAGE_LOCK_BAR 0x01` | Retention Drive Motor | Fires the gear-driven mechanical lockbar to pin the vials down before structural tilt tolerances cross limits. |
