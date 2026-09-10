@@ -21,6 +21,8 @@ class HarrierVTOLController:
             return {"allow_launch": True, "target_egt_limit": self.max_allowable_egt}
             
         elif hydraulic_lock_status == "DISENGAGED_TRANSIT_MODE":
+            # Restrict engine nozzle temperatures to protect the uncompressed outer polymer coatings
+            print("[WARNING] Ship is nested low in rubber sleeve. Throttling Harrier EGT to protect armor.")
             print("[WARNING] Ship is nested low in rubber sleeve. Throttling Harrier EGT to protect armor.")
             return {"allow_launch": True, "target_egt_limit": 520.0}
             
@@ -30,5 +32,7 @@ class HarrierVTOLController:
 
 if __name__ == "__main__":
     controller = HarrierVTOLController()
+    # Test case representing the hull sitting low inside its defensive OtterBox sleeve
+    flight_profile = controller.evaluate_flight_deck_interlock("DISENGAGED_TRANSIT_MODE", 92.4)
     flight_profile = controller.evaluate_flight_deck_interlock("DISENGAGED_TRANSIT_MODE", 92.4)
     print(f"[EXECUTE] Command Vector Output Profile: {flight_profile}")
