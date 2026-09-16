@@ -1,5 +1,5 @@
-# 🏥 USS Montana (BB-67) & USS Iowa (BB-61) POW Rescue Medical Battleship
-## 🛡️ Enterprise Architecture Integration Standard & Master Design Manifest
+# USS Montana (BB-67) & USS Iowa (BB-61) POW Rescue Medical Battleship
+## Enterprise Architecture Integration Standard & Master Design Manifest
 
 The Iowa class was a class of six fast battleships ordered by the United States Navy in 1939 and 1940.
 
@@ -13,7 +13,7 @@ By trading out heavy offensive main batteries and high-explosive magazines for h
 
 * * * * *
 
-## 📈 System Architectural Framework
+## System Architectural Framework
 
 ```
                        [ MULTI-MEDIUM CITADEL CAPSULE ]
@@ -46,4 +46,4 @@ By trading out heavy offensive main batteries and high-explosive magazines for h
 
 * * * * *
 
-## 🗂️ 1. Parametric Mechanical Blueprints (`src/mechanical_blueprints.scad`)
+## 1. Parametric Mechanical Blueprints (`src/mechanical_blueprints.scad`)
